@@ -1,2 +1,4 @@
 # DigiPay
-Versatile tool that simplifies B2C client management, user account and coupon management, B2B buying, and transaction handling.
+Administration application, a versatile tool that simplifies B2C client management, user account and coupon management, B2B buying, and transaction handling. It enables to efficiently organize and maintain client information, manage user accounts securely, generate and distribute coupons, handle B2B customer accounts, process transactions, and track sales performance. With self-service options for users and streamlined communication channels, my application enhances the overall customer experience while optimizing administrative tasks and supporting informed decision-making.
+
+The system consists of three modules, namely the processing server, the administration application, and mobile application (cross-platform) . The administration application is a web application with a frontend and a backend, while the processing server receives vendor update requests and processes them as transactions.
