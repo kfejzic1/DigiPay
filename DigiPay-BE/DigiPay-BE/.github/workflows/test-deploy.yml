@@ -1,0 +1,73 @@
+name: Test and Deploy
+
+#on:
+  #workflow_run:
+    #workflows: [ "e2e-tests" ]
+    #types: [ completed ]
+    
+#on:
+  #pull_request:
+    #branches: [ main ]
+    
+#on:
+  #release:
+    #types: [ published ]
+    
+#on: [ workflow_dispatch ]
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  xunit:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: run-tests
+        run: |
+          dotnet test --logger trx --configuration Release
+      - name: Process trx reports with default
+        if: always()
+        # You may also reference just the major or major.minor version
+        uses: im-open/process-dotnet-test-results@v2.3.0
+        id: process-test
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          #only if on pull_request in yml
+          update-comment-if-one-exists: false
+          create-results-file: true
+          report-title-filter: "Tests" # See Notes below on title output
+
+      - name: Annotate Test Results
+        run: cat ${{ steps.process-test.outputs.test-results-file-path }} > $GITHUB_STEP_SUMMARY
+
+  deploy:
+    needs: xunit
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: docker login
+      env:
+        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+    - name: Setup .env.prod file
+      run: |
+        pwd
+        ls
+        echo "${{ secrets.ENV_FILE }}" > ./AdministrationAPI/.env.prod
+
+    - name: Build the backend image
+      run: docker build . --file ./Dockerfile.prod --tag username/image:$(date +%s) --tag username/image:latest
+      
+    - name: Docker Push backend
+      run: docker push username/image --all-tags

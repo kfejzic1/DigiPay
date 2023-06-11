@@ -1,0 +1,350 @@
+{
+	"info": {
+		"_postman_id": "55925294-b870-46fe-8033-7d95d1c24117",
+		"name": "Processing Server Test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24750639"
+	},
+	"item": [
+		{
+			"name": "Get JWT from AdministrationAPI",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Provjera statusnog koda\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    var responseBody = pm.response.json();\r",
+							"    var token = responseBody.token;\r",
+							"    pm.collectionVariables.set('validToken', token);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"mkokor2@etf.unsa.ba\",\r\n  \"password\": \"Sifra!23\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://siprojekat.duckdns.org:5051/api/User/login",
+					"protocol": "http",
+					"host": [
+						"siprojekat",
+						"duckdns",
+						"org"
+					],
+					"port": "5051",
+					"path": [
+						"api",
+						"User",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Clean database",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{domainAndUserBankAccount}}/DeleteAllAccountsForUser?token={{validToken}}",
+					"host": [
+						"{{domainAndUserBankAccount}}"
+					],
+					"path": [
+						"DeleteAllAccountsForUser"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{validToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create bank account for user (invalid token)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401!\", () => {\r",
+							"    pm.response.to.have.status(401);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Token is invalid!\", () => {\r",
+							"    JSON.parse(pm.response.text()).message == \"Invalid token!\";\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"currency\": \"BAM\",\r\n    \"bankName\": \"UniCredit\",\r\n    \"description\": \"Ovo je moj račun.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domainAndUserBankAccount}}/CreateAccount?token={{invalidToken}}",
+					"host": [
+						"{{domainAndUserBankAccount}}"
+					],
+					"path": [
+						"CreateAccount"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{invalidToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create bank account for user (invalid currency)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400!\", () => {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Currency is invalid!\", () => {\r",
+							"    JSON.parse(pm.response.text()).message == \"Invalid currency!\"\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"currency\": \"invalidCurrency\",\r\n    \"bankName\": \"UniCredit\",\r\n    \"description\": \"Ovo je moj račun.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domainAndUserBankAccount}}/CreateAccount?token={{validToken}}",
+					"host": [
+						"{{domainAndUserBankAccount}}"
+					],
+					"path": [
+						"CreateAccount"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{validToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create bank account for user (successfull)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200!\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Account is created!\", () => {\r",
+							"    JSON.parse(pm.response.text()).accountNumber !== null;\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"currency\": \"BAM\",\r\n    \"bankName\": \"UniCredit\",\r\n    \"description\": \"Ovo je moj račun.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domainAndUserBankAccount}}/CreateAccount?token={{validToken}}",
+					"host": [
+						"{{domainAndUserBankAccount}}"
+					],
+					"path": [
+						"CreateAccount"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{validToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check existence of created bank account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Account is present!\", () => {\r",
+							"    JSON.parse(pm.response.text()).length == 1;\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{domainAndUserBankAccount}}/GetAllAccountsForUser?token={{validToken}}",
+					"host": [
+						"{{domainAndUserBankAccount}}"
+					],
+					"path": [
+						"GetAllAccountsForUser"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{validToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create new bank account with same currency (invalid)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400!\", () => {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Unable to create another account with same currency!\", () => {\r",
+							"    JSON.parse(pm.response.text()).message == \"User already has BAM account!\";\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"currency\": \"BAM\",\r\n    \"bankName\": \"UniCredit\",\r\n    \"description\": \"Ovo je moj račun.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{domainAndUserBankAccount}}/CreateAccount?token={{validToken}}",
+					"host": [
+						"{{domainAndUserBankAccount}}"
+					],
+					"path": [
+						"CreateAccount"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{validToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "invalidToken",
+			"value": "invalid",
+			"type": "string"
+		},
+		{
+			"key": "domainAndUserBankAccount",
+			"value": "https://processingserver.herokuapp.com/api/UserBankAccount",
+			"type": "string"
+		},
+		{
+			"key": "validToken",
+			"value": ""
+		}
+	]
+}

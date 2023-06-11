@@ -1,0 +1,55 @@
+trigger:
+  branches:
+    include:
+      - master
+
+variables:
+  solution: '**/*.sln'
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    version: '6.x'
+    includePreviewVersions: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore NuGet Packages'
+  inputs:
+    command: 'restore'
+    projects: '$(solution)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build Solution'
+  inputs:
+    command: 'build'
+    projects: '$(solution)'
+    configuration: '$(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run Tests'
+  inputs:
+    command: 'test'
+    projects: '**/*Test.csproj'
+    configuration: '$(buildConfiguration)'
+    arguments: '--collect:"Code Coverage"'
+
+- task: CopyFiles@2
+  displayName: 'Copy Source Code to Artifact Staging Directory'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: source-code'
+  condition: succeededOrFailed()
+
+- task: PowerShell@2
+  displayName: 'Stop Build on Test Failure'
+  condition: eq(variables['Agent.JobStatus'], 'Failed')  # Zaustavi build ako testovi ne uspiju
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Unit tests failed. Stopping the build..."
+      exit 1
